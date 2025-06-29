@@ -2,14 +2,14 @@ import os, threading, datetime
 from flask import Flask, request
 import telebot
 
-from ask_handler import handle_worm
+from worm_handler import handle_worm
 from callback import handle_retry_button
 from utils import auto_group_greeting
 from memory import load_groups, save_groups
 from start_handler import handle_start
 from dataall_handler import handle_dataall
 from greeting_group_handler import handle_bot_added
-from askv2_handler import handle_ask
+from ask_handler import handle_ask
 
 TOKEN = "7053031372:AAGGOnE72JbZat9IaXFqa-WRdv240vSYjms"
 APP_URL = "https://sever-zproject.onrender.com"
