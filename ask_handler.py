@@ -7,26 +7,29 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
-# ✅ Đổi sang endpoint chuẩn như mẫu curl bạn đã gửi
+# ✅ Endpoint Gemini chính xác
 GEMINI_API_KEY = "AIzaSyDpmTfFibDyskBHwekOADtstWsPUCbIrzE"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
+# 🎨 Phong cách AI
 AI_PROMPT_STYLE = {
     "ai_name": "Zproject X Dcb",
-    "prompt": "Hãy trả lời theo phong cách dễ thương, thông minh ✨"
+    "prompt": "Hãy trả lời yêu cầu của tôi theo phong cách dễ thương, thông minh ✨"
 }
 
+# 🧩 Nút trả lời lại
 def build_reply_button(user_id, question):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("🔁 Trả lời lại", callback_data=f"retry|{user_id}|{question}"))
     return markup
 
+# 🧠 Hàm xử lý chính
 def handle_ask(bot, message):
     prompt = message.text.replace("/ask", "").strip()
     if not prompt:
-        return bot.reply_to(message, "❓ Gõ /ask <câu hỏi> nha bạn ơi!")
+        return bot.reply_to(message, "❓ Bạn chưa nhập câu hỏi rồi đó!")
 
-    msg_status = bot.reply_to(message, "⏳...")
+    msg_status = bot.reply_to(message, "⏳")
 
     user_id = message.from_user.id
     memory = load_user_memory(user_id)
@@ -35,33 +38,34 @@ def handle_ask(bot, message):
         headers = {"Content-Type": "application/json"}
         full_prompt = f"{AI_PROMPT_STYLE['prompt']}\n\nNgười dùng hỏi: {prompt}"
         parts = [{"text": full_prompt}]
-
-        # Nếu có ảnh đính kèm tin nhắn trước
         image_attached = False
+
+        # Nếu có ảnh đính kèm
         if message.reply_to_message and message.reply_to_message.photo:
             photo = message.reply_to_message.photo[-1]
             file_info = bot.get_file(photo.file_id)
-            downloaded_file = bot.download_file(file_info.file_path)
+            downloaded = bot.download_file(file_info.file_path)
 
-            image = Image.open(BytesIO(downloaded_file))
+            image = Image.open(BytesIO(downloaded))
             buffer = BytesIO()
             image.save(buffer, format="JPEG")
-            base64_img = base64.b64encode(buffer.getvalue()).decode()
+            base64_image = base64.b64encode(buffer.getvalue()).decode()
 
             parts.insert(0, {
                 "inline_data": {
                     "mime_type": "image/jpeg",
-                    "data": base64_img
+                    "data": base64_image
                 }
             })
             image_attached = True
 
+        # Gọi Gemini API
         data = {"contents": [{"parts": parts}]}
         res = requests.post(GEMINI_URL, headers=headers, json=data)
 
         if res.status_code != 200:
             return bot.edit_message_text(
-                f"❌ API lỗi:\n<pre>{res.text}</pre>",
+                f"❌ Lỗi API Gemini:\n<pre>{res.text}</pre>",
                 msg_status.chat.id,
                 msg_status.message_id,
                 parse_mode="HTML"
@@ -69,7 +73,7 @@ def handle_ask(bot, message):
 
         result = res.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-        # ✅ Ghi thêm timestamp & trạng thái có ảnh
+        # 📝 Ghi nhớ người dùng
         memory.append({
             "question": prompt,
             "answer": result,
@@ -81,6 +85,7 @@ def handle_ask(bot, message):
         formatted = format_html(result)
         markup = build_reply_button(user_id, prompt)
 
+        # Nếu trả lời quá dài
         if len(formatted) > 4000:
             filename = f"zproject_{uuid.uuid4().hex[:6]}.html"
             with open(filename, "w", encoding="utf-8") as f:
@@ -88,12 +93,12 @@ def handle_ask(bot, message):
             bot.send_document(
                 message.chat.id,
                 open(filename, "rb"),
-                caption="📄 Phản hồi dài quá nên gửi file nè!",
+                caption="📄 Trả lời dài quá nên gửi file nha!",
                 parse_mode="HTML"
             )
         else:
             bot.edit_message_text(
-                f"🤖 <b>{AI_PROMPT_STYLE['ai_name']} trả lời:</b><br/><br/>{formatted}",
+                f"🤖 <b>{AI_PROMPT_STYLE['ai_name']} trả lời:</b>\n\n{formatted}",
                 msg_status.chat.id,
                 msg_status.message_id,
                 parse_mode="HTML",
@@ -101,4 +106,9 @@ def handle_ask(bot, message):
             )
 
     except Exception as e:
-        bot.edit_message_text(f"⚠️ Lỗi xử lý: <code>{e}</code>", msg_status.chat.id, msg_status.message_id, parse_mode="HTML")
+        bot.edit_message_text(
+            f"⚠️ Lỗi xử lý:\n<code>{e}</code>",
+            msg_status.chat.id,
+            msg_status.message_id,
+            parse_mode="HTML"
+        )
