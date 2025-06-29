@@ -6,7 +6,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
-GEMINI_API_KEY = "YOUR_API_KEY"
+GEMINI_API_KEY = "7053031372:AAGGOnE72JbZat9IaXFqa-WRdv240vSYjms"
 GEMINI_TEXT_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 GEMINI_VISION_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-vision:generateContent?key={GEMINI_API_KEY}"
 
