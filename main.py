@@ -3,7 +3,7 @@ from flask import Flask, request
 import os, threading, datetime, json, time
 
 # --- Cấu hình ---
-TOKEN = "7411942861:AAH2yZqA5yL3oy1wEmunhFPrT8ftXDXJDWs"
+TOKEN = "7053031372:AAGGOnE72JbZat9IaXFqa-WRdv240vSYjms"
 ADMIN_ID = 5819094246
 GROUP_FILE = "groups.json"
 APP_URL = "https://sever-zproject.onrender.com"
@@ -39,7 +39,7 @@ def receive_update():
 # --- Lệnh /start ---
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    bot.reply_to(message, "🤖 Xin chào! Gõ /donggop <nội dung> để góp ý nha!")
+    bot.reply_to(message, "🤖 Xin chào! Gõ /donggop <nội dung> để góp ý nha, chứ admin éo biet làm lệnh gì:v!")
 
 # --- Lệnh /donggop ---
 @bot.message_handler(commands=['donggop'])
