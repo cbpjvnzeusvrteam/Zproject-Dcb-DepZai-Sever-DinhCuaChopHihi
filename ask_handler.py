@@ -18,7 +18,7 @@ def build_reply_button(user_id, question):
     markup.add(InlineKeyboardButton("🔁 Trả lời lại", callback_data=f"retry|{user_id}|{question}"))
     return markup
 
-def handle_ask(bot, message):
+def handle_wrom(bot, message):
     prompt = message.text.replace("/worm", "").strip()
     if not prompt:
         return bot.reply_to(message, "❓ Bạn chưa nhập câu hỏi rồi đó!")
