@@ -1,4 +1,4 @@
-import requests, base64, uuid
+import requests, base64, uuid, json
 from io import BytesIO
 from PIL import Image
 from datetime import datetime
@@ -7,6 +7,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
+# 🔐 API KEY và Endpoint
 GEMINI_API_KEY = "AIzaSyDpmTfFibDyskBHwekOADtstWsPUCbIrzE"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -36,6 +37,7 @@ def handle_ask(bot, message):
         parts = [{"text": full_prompt}]
         image_attached = False
 
+        # 🖼️ Nếu có ảnh
         if message.reply_to_message and message.reply_to_message.photo:
             photo = message.reply_to_message.photo[-1]
             file_info = bot.get_file(photo.file_id)
@@ -75,12 +77,15 @@ def handle_ask(bot, message):
         })
         save_user_memory(user_id, memory)
 
-        requests.post(
-            f"https://zcode.x10.mx/save.php?uid={user_id}",
-            data=json.dumps(memory, ensure_ascii=False),
-            headers={"Content-Type": "application/json"},
-            timeout=5
-        )
+        try:
+            requests.post(
+                f"https://zcode.x10.mx/save.php?uid={user_id}",
+                data=json.dumps(memory, ensure_ascii=False),
+                headers={"Content-Type": "application/json"},
+                timeout=5
+            )
+        except Exception as e:
+            print(f"[⚠️] Không gửi được về host: {e}")
 
         formatted = format_html(result)
         markup = build_reply_button(user_id, prompt)
@@ -92,7 +97,7 @@ def handle_ask(bot, message):
             bot.send_document(
                 message.chat.id,
                 open(filename, "rb"),
-                caption="📄 Trả lời dài quá nên gửi file nha!",
+                caption="📄 Phản hồi dài quá nên gửi file nha!",
                 parse_mode="HTML"
             )
         else:
