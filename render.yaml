@@ -2,7 +2,6 @@ services:
   - type: web
     name: zproject-bot
     env: python
-    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     autoDeploy: true

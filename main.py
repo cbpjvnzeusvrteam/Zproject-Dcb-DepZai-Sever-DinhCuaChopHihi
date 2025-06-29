@@ -25,12 +25,12 @@ def save_groups(groups):
 
 GROUPS = load_groups()
 
-# --- Route kiểm tra bot hoạt động ---
+# --- Trang chính kiểm tra bot online ---
 @app.route("/")
 def home():
-    return "<h3>🤖 Bot ZProject đang hoạt động qua webhook!</h3>"
+    return "<h3>🤖 Bot ZProject hoạt động qua Webhook</h3>"
 
-# --- Route nhận webhook từ Telegram ---
+# --- Webhook nhận dữ liệu từ Telegram ---
 @app.route(f"/{TOKEN}", methods=["POST"])
 def receive_update():
     json_string = request.get_data().decode("utf-8")
@@ -41,7 +41,7 @@ def receive_update():
 # --- /start ---
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    bot.reply_to(message, "🤖 Bot hiện chưa có lệnh vì admin chưa suy nghĩ ra :v\nBạn có thể liên hệ với admin tại @zproject2 để góp ý hoặc hợp tác nha!")
+    bot.reply_to(message, "🤖 Xin chào! Bạn có thể gửi góp ý bằng cách dùng /donggop <nội dung>")
 
 # --- /donggop ---
 @bot.message_handler(commands=['donggop'])
@@ -55,36 +55,38 @@ def dong_gop(message):
 
     try:
         bot.send_message(ADMIN_ID, full_text)
-        bot.reply_to(message, "✅ Cảm ơn bạn đã góp ý! Admin sẽ xem xét sớm.")
+        bot.reply_to(message, "✅ Cảm ơn bạn đã góp ý!")
     except:
-        bot.reply_to(message, "❌ Lỗi khi gửi góp ý đến admin.")
+        bot.reply_to(message, "❌ Không gửi được góp ý đến admin.")
 
 # --- /time ---
 @bot.message_handler(commands=['time'])
 def uptime_cmd(message):
     uptime = datetime.datetime.now() - START_TIME
-    bot.reply_to(message, f"⏳ Bot đã hoạt động được: {str(uptime).split('.')[0]}")
+    bot.reply_to(message, f"⏳ Bot đã chạy được: {str(uptime).split('.')[0]}")
 
-# --- Theo dõi nhóm tự động ---
+# --- Theo dõi nhóm ---
 @bot.message_handler(func=lambda msg: True)
 def track_groups(msg):
     if msg.chat.type in ['group', 'supergroup']:
         GROUPS.add(msg.chat.id)
         save_groups(GROUPS)
 
-# --- Tự động gửi lời chào nhóm mỗi 30 phút ---
+# --- Gửi tin định kỳ ---
 def auto_group_greeting():
     while True:
         time.sleep(1800)
         for group_id in GROUPS:
             try:
-                bot.send_message(group_id, "👋 Xin chào các bạn! ZProject đây nè :v\nBạn có ý tưởng gì hay để admin cập nhật bot không?\nGõ `/donggop <nội dung>` để góp ý nhé 💡")
+                bot.send_message(group_id, "👋 Chào mọi người! Bạn có góp ý gì không? Gõ /donggop + nội dung nha!")
             except:
                 pass
 
-# --- Khởi động Flask + webhook + thread gửi tin nhắn ---
+# --- Khởi chạy ---
 if __name__ == "__main__":
     bot.remove_webhook()
     bot.set_webhook(url=f"{APP_URL}/{TOKEN}")
+    print(bot.get_webhook_info())  # In thông tin Webhook để kiểm tra
     threading.Thread(target=auto_group_greeting).start()
+    print("✅ Flask đang chạy tại cổng:", os.environ.get("PORT"))
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
