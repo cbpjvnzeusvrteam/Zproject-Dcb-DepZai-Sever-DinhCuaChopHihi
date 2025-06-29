@@ -2,14 +2,13 @@ import os, threading, datetime
 from flask import Flask, request
 import telebot
 
-from worm_handler import handle_worm
+from ask_handler import handle_ask
 from callback import handle_retry_button
 from utils import auto_group_greeting
 from memory import load_groups, save_groups
 from start_handler import handle_start
 from dataall_handler import handle_dataall
 from greeting_group_handler import handle_bot_added
-from ask_handler import handle_ask
 
 TOKEN = "7053031372:AAGGOnE72JbZat9IaXFqa-WRdv240vSYjms"
 APP_URL = "https://sever-zproject.onrender.com"
@@ -38,10 +37,6 @@ def uptime(message):
 @bot.message_handler(commands=["start"])
 def start_cmd(message):
     handle_start(bot, message)
-    
-@bot.message_handler(commands=["worm"])
-def ask_v2_handler(message):
-    handle_askv2(bot, message)
     
 @bot.message_handler(commands=["ask"])
 def ask_command(message):
