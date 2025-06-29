@@ -9,6 +9,6 @@ def handle_start(bot, message):
     )
 
     welcome = "🤖 Xin chào bạn đến với <b>ZProject Bot</b>!\n\n"
-    welcome += "Hãy chọn liên kết bên dưới để kết nối cùng cộng đồng ZProject nhen ✨"
+    welcome += "Hãy chọn liên kết bên dưới để kết nối cùng cộng đồng ZProject nhé ✨"
 
     bot.send_message(message.chat.id, welcome, reply_markup=markup, parse_mode="HTML")

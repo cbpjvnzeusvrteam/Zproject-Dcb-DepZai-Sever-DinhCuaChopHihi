@@ -4,9 +4,8 @@ from types import SimpleNamespace
 def handle_retry_button(bot, call):
     _, uid, question = call.data.split("|", 2)
     if str(call.from_user.id) != uid:
-        return bot.answer_callback_query(call.id, "🚫 Không phải câu hỏi của bạn đâu nha!")
+        return bot.answer_callback_query(call.id, "🚫 Không phải câu hỏi của bạn nha!")
 
-    # Fake message để tái sử dụng handle_ask
     msg = SimpleNamespace()
     msg.chat = call.message.chat
     msg.message_id = call.message.message_id
@@ -14,5 +13,5 @@ def handle_retry_button(bot, call):
     msg.from_user = call.from_user
     msg.reply_to_message = None
 
-    bot.answer_callback_query(call.id, "🔁 Đang hỏi lại...")
+    bot.answer_callback_query(call.id, "🔁 Đang trả lời lại...")
     handle_ask(bot, msg)

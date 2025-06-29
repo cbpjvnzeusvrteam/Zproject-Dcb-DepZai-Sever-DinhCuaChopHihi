@@ -5,6 +5,6 @@ def auto_group_greeting(bot, GROUPS):
         time.sleep(1800)
         for group_id in GROUPS:
             try:
-                bot.send_message(group_id, "👋 Chào cả nhà! Đừng quên dùng /ask để hỏi AI Zproject nha!")
+                bot.send_message(group_id, "👋 Hello cả nhà! Dùng /ask để hỏi AI ZProject nha!")
             except:
                 pass

@@ -1,5 +1,4 @@
-pyTelegramBotAPI
 Flask
-requests
+pyTelegramBotAPI
 Pillow
-setuptools
+requests

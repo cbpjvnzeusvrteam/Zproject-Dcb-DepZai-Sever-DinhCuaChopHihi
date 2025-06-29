@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime, timedelta
-from collections import defaultdict, Counter
+from collections import Counter
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 ADMIN_ID = 5819094246
@@ -68,18 +68,41 @@ def handle_dataall(bot, message):
     hour_table = "\n".join([f"{hour}: {count} lượt" for hour, count in sorted(hourly_count.items())]) or "Không có dữ liệu"
 
     stat_html = f"""
-<b>📊 ZProject Thống kê [ Create By Zproject X Duong Cong Bang ]</b><br><br>
-👥 <b>Người dùng:</b> {total_users}<br>
-🏘️ <b>Nhóm:</b> {total_groups}<br>
-📨 <b>Lượt Dùng Bot hôm nay:</b> {today_ask}<br>
-📆 <b>So với hôm qua:</b> {diff:+d} ({trend})<br>
-🖼️ Có ảnh: <b>{with_image}</b> / ❌ Không ảnh: <b>{without_image}</b><br><br>
-
-<b>🏆 Top người dùng:</b><br>{top_text}<br><br>
-<b>⏰ Hoạt động theo giờ:</b><br><code>{hour_table}</code>
+<b>📊 ZProject Thống kê tổng hợp</b>\n\n
+👥 <b>Người dùng:</b> {total_users}\n
+🏘️ <b>Nhóm:</b> {total_groups}\n
+📨 <b>Lượt Dùng Bot hôm nay:</b> {today_ask}\n
+📆 <b>So với hôm qua:</b> {diff:+d} ({trend})\n
+🖼️ Có ảnh: <b>{with_image}</b> • ❌ Không ảnh: <b>{without_image}</b>\n\n
+<b>🏆 Top người dùng:</b>\n{top_text}\n\n
+<b>⏰ Hoạt động theo giờ:</b>\n<code>{hour_table}</code>
 """
 
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("📄 Xuất thống kê .txt", callback_data="export_stats"))
 
     bot.send_message(message.chat.id, stat_html, parse_mode="HTML", reply_markup=markup)
+
+
+def export_stats_txt(bot, call):
+    if call.from_user.id != ADMIN_ID:
+        return bot.answer_callback_query(call.id, "🚫 Không có quyền!")
+
+    index = 0
+    while os.path.exists(f"{EXPORT_PREFIX}{index}.txt"):
+        index += 1
+
+    filename = f"{EXPORT_PREFIX}{index}.txt"
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    content = f"""📊 ZProject Thống kê lần {index}\n
+Thời gian: {now}
+Tổng người dùng: {len([f for f in os.listdir() if f.startswith("memory_")])}
+Tổng nhóm: {len(json.load(open(GROUP_FILE))) if os.path.exists(GROUP_FILE) else 0}
+"""
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    bot.send_document(call.message.chat.id, open(filename, "rb"), caption=f"📄 Thống kê #{index}")
+    os.remove(filename)
+    bot.answer_callback_query(call.id, "✅ Đã gửi file thống kê!")
