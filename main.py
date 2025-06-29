@@ -61,28 +61,29 @@ def track_groups(msg):
     if msg.chat.type in ['group', 'supergroup']:
         GROUPS.add(msg.chat.id)
         save_groups(GROUPS)
-
+        
 @bot.callback_query_handler(func=lambda call: call.data == "export_stats")
 def export_stats_txt(call):
     if call.from_user.id != ADMIN_ID:
-        return bot.answer_callback_query(call.id, "🚫 Không đủ quyền.")
+        return bot.answer_callback_query(call.id, "🚫 Bạn không có quyền.")
 
-    stats_files = [f for f in os.listdir() if f.startswith("zprojectxdcb_thongke_lanthu_") and f.endswith(".txt")]
-    index = len(stats_files)
-    file_name = f"zprojectxdcb_thongke_lanthu_{index}.txt"
+    index = 0
+    while os.path.exists(f"{EXPORT_PREFIX}{index}.txt"):
+        index += 1
 
-    content = f"""📊 Thống kê ZPROJECT lần {index}\n
-Tổng user: {len([f for f in os.listdir() if f.startswith("memory_")])}
-Tổng group: {len(json.load(open("groups.json")) if os.path.exists("groups.json") else [])}
-Lượt dùng /ask hôm nay: Tính toán ở file dataall_handler.py nha 😉
+    filename = f"{EXPORT_PREFIX}{index}.txt"
+    content = f"""📊 ZProject Thống kê lần {index}\n
+Người dùng: {len([f for f in os.listdir() if f.startswith("memory_")])}
+Nhóm: {len(json.load(open(GROUP_FILE)) if os.path.exists(GROUP_FILE) else [])}
+Thời gian: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
 
-    with open(file_name, "w", encoding="utf-8") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
 
-    bot.send_document(call.message.chat.id, open(file_name, "rb"), caption=f"📄 ZProject Thống kê #{index}")
-    os.remove(file_name)
-    bot.answer_callback_query(call.id, "✅ Đã xuất xong thống kê!")
+    bot.send_document(call.message.chat.id, open(filename, "rb"), caption=f"📄 Thống kê #{index}")
+    os.remove(filename)
+    bot.answer_callback_query(call.id, "✅ Xuất thống kê thành công!")
     
 # Bắt đầu webhook và luồng lời chào
 if __name__ == "__main__":

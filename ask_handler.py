@@ -2,13 +2,14 @@ import requests, base64, uuid
 from io import BytesIO
 from PIL import Image
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from datetime import datetime
 
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
-# ✅ API cũ (v1beta) vẫn ổn định hơn nếu dùng key từ MakerSuite
-GEMINI_API_KEY = "YOUR_API_KEY"
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+# ✅ Endpoint Gemini chuẩn từ curl bạn đưa
+GEMINI_API_KEY = "AIzaSyDpmTfFibDyskBHwekOADtstWsPUCbIrzE"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 AI_PROMPT_STYLE = {
     "ai_name": "Zproject X Dcb",
@@ -61,7 +62,13 @@ def handle_ask(bot, message):
             return bot.edit_message_text(f"❌ API lỗi:\n<pre>{res.text}</pre>", msg_status.chat.id, msg_status.message_id, parse_mode="HTML")
 
         result = res.json()["candidates"][0]["content"]["parts"][0]["text"]
-        memory.append({"question": prompt, "answer": result})
+
+        # ✅ Ghi nhận thêm "created" để thống kê dễ dàng
+        memory.append({
+            "question": prompt,
+            "answer": result,
+            "created": datetime.now().strftime("%Y-%m-%d")
+        })
         save_user_memory(user_id, memory)
 
         formatted = format_html(result)
