@@ -6,7 +6,7 @@ import os, threading, datetime, json, time
 TOKEN = "7053031372:AAGGOnE72JbZat9IaXFqa-WRdv240vSYjms"
 ADMIN_ID = 5819094246
 GROUP_FILE = "groups.json"
-APP_URL = "https://severdcb-1709.onrender.com"
+APP_URL = "https://sever-zproject.onrender.com"
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
