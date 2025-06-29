@@ -7,14 +7,11 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from memory import load_user_memory, save_user_memory
 from formatter import format_html
 
-# 🔐 API KEY và Endpoint
+# ✨ Cấu hình endpoint
 GEMINI_API_KEY = "AIzaSyDpmTfFibDyskBHwekOADtstWsPUCbIrzE"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-
-AI_PROMPT_STYLE = {
-    "ai_name": "Zproject X Dcb",
-    "prompt": "Hãy trả lời yêu cầu của tôi theo phong cách dễ thương, thông minh ✨"
-}
+REMOTE_PROMPT_URL = "https://zcode.x10.mx/prompt.json"
+REMOTE_LOG_HOST = "https://zcode.x10.mx/save.php"
 
 def build_reply_button(user_id, question):
     markup = InlineKeyboardMarkup()
@@ -24,25 +21,36 @@ def build_reply_button(user_id, question):
 def handle_ask(bot, message):
     prompt = message.text.replace("/ask", "").strip()
     if not prompt:
-        return bot.reply_to(message, "❓ Bạn chưa nhập câu hỏi rồi kìa!")
+        return bot.reply_to(message, "❓ Bạn chưa nhập câu hỏi rồi đó!")
 
-    msg_status = bot.reply_to(message, "⏳ Đang hỏi Gemini...")
+    msg_status = bot.reply_to(message, "🤖")
 
     user_id = message.from_user.id
+    user_name = message.from_user.first_name
     memory = load_user_memory(user_id)
 
     try:
+        # 📥 Tải prompt từ host
+        prompt_data = requests.get(REMOTE_PROMPT_URL, timeout=5).json()
+        system_prompt = prompt_data.get("prompt", "Bạn là AI thông minh vui vẻ.")
+
+        # 🧠 Ghép kèm 5 câu cũ gần nhất
+        history_block = ""
+        if memory:
+            for item in memory[-5:]:
+                history_block += f"Người dùng hỏi: {item['question']}\nAI: {item['answer']}\n"
+
+        full_prompt = f"{system_prompt}\n\n[Ngữ cảnh trước đó với {user_name}]\n{history_block}\nNgười dùng hiện tại hỏi: {prompt}"
+
         headers = {"Content-Type": "application/json"}
-        full_prompt = f"{AI_PROMPT_STYLE['prompt']}\n\nNgười dùng hỏi: {prompt}"
         parts = [{"text": full_prompt}]
         image_attached = False
 
-        # 🖼️ Nếu có ảnh
+        # 🖼️ Gửi ảnh nếu có
         if message.reply_to_message and message.reply_to_message.photo:
             photo = message.reply_to_message.photo[-1]
             file_info = bot.get_file(photo.file_id)
             downloaded = bot.download_file(file_info.file_path)
-
             image = Image.open(BytesIO(downloaded))
             buffer = BytesIO()
             image.save(buffer, format="JPEG")
@@ -69,23 +77,26 @@ def handle_ask(bot, message):
 
         result = res.json()["candidates"][0]["content"]["parts"][0]["text"]
 
-        memory.append({
+        # ✅ Lưu kèm user info
+        entry = {
             "question": prompt,
             "answer": result,
             "created": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "with_image": image_attached
-        })
+            "with_image": image_attached,
+            "name": user_name
+        }
+        memory.append(entry)
         save_user_memory(user_id, memory)
 
         try:
             requests.post(
-                f"https://zcode.x10.mx/save.php?uid={user_id}",
+                f"{REMOTE_LOG_HOST}?uid={user_id}",
                 data=json.dumps(memory, ensure_ascii=False),
                 headers={"Content-Type": "application/json"},
                 timeout=5
             )
         except Exception as e:
-            print(f"[⚠️] Không gửi được về host: {e}")
+            print(f"[⚠️] Gửi host thất bại: {e}")
 
         formatted = format_html(result)
         markup = build_reply_button(user_id, prompt)
@@ -97,12 +108,12 @@ def handle_ask(bot, message):
             bot.send_document(
                 message.chat.id,
                 open(filename, "rb"),
-                caption="📄 Phản hồi dài quá nên gửi file nha!",
+                caption="📄 Trả lời dài quá nên gửi file nha!",
                 parse_mode="HTML"
             )
         else:
             bot.edit_message_text(
-                f"🤖 <b>{AI_PROMPT_STYLE['ai_name']} trả lời:</b>\n\n{formatted}",
+                f"🤖 <b>ZProject trả lời:</b>\n\n{formatted}",
                 msg_status.chat.id,
                 msg_status.message_id,
                 parse_mode="HTML",
