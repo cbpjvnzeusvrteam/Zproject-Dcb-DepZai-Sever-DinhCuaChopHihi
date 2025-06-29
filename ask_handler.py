@@ -19,7 +19,7 @@ def build_reply_button(user_id, question):
     return markup
 
 def handle_ask(bot, message):
-    prompt = message.text.replace("/ask", "").strip()
+    prompt = message.text.replace("/worm", "").strip()
     if not prompt:
         return bot.reply_to(message, "❓ Bạn chưa nhập câu hỏi rồi đó!")
 
@@ -113,7 +113,7 @@ def handle_ask(bot, message):
             )
         else:
             bot.edit_message_text(
-                f"🤖 <b>ZProject trả lời:</b>\n\n{formatted}",
+                f"🤖 <i>ZProject [ WORMGPT ] trả lời:</i>\n\n<b>{formatted}</b>",
                 msg_status.chat.id,
                 msg_status.message_id,
                 parse_mode="HTML",
